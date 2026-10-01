@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const BIN = join(__dirname, "../dist/index.js");
 const TOKEN = "frg_supersecret123";
-const task = { id: "tsk_aaaa", title: "Teste", project: "portfolio", priority: "p1", estimateMin: 45, status: "todo", date: "2026-09-30", source: "agent", subtasks: [] };
+const task = { id: "tsk_aaaa", title: "Teste", project: "portfolio", priority: "p1", estimateMin: 45, status: "todo", date: "2026-09-30", source: "agent", createdAt: "2026-09-30T10:42:00.000Z", subtasks: [] };
 const seen: { method: string; url: string; body: string }[] = [];
 
 let server: Server;
@@ -30,9 +30,9 @@ beforeAll(async () => {
       if (req.url === "/api/v1/tasks/tsk_nope/done") return send(404, { error: { code: "NOT_FOUND", message: "Tarefa 'tsk_nope' não encontrada" } });
       if (req.url!.startsWith("/api/v1/tasks") && req.method === "GET") return send(200, { version: 1, data: [task] });
       if (req.url === "/api/v1/tasks" && req.method === "POST") return send(201, { version: 1, data: { ...task, ...JSON.parse(body) } });
-      if (req.url!.startsWith("/api/v1/context")) return send(200, { version: 1, data: { date: "2026-09-30", streak: 3, tasks: [task], projects: [{ slug: "portfolio", name: "Portfólio", color: "#f00", repo: null, openTasks: 1, idleDays: 9, lastCommit: { at: "2026-09-21T10:00:00Z", message: "style: hero" }, commitsWeek: 0, openIssues: 1 }], health: null, motivation: { date: "2026-09-30", text: "msg", source: "rule" }, suggestions: [], reminders: [{ id: "rem_aaaa", text: "Revisar PRs", at: "14:30", repeat: "weekdays", active: true }] } });
+      if (req.url!.startsWith("/api/v1/context")) return send(200, { version: 1, data: { date: "2026-09-30", streak: 3, tasks: [task], projects: [{ slug: "portfolio", name: "Portfólio", color: "#f00", repo: null, openTasks: 1, idleDays: 9, lastCommit: { at: "2026-09-21T10:00:00Z", message: "style: hero" }, commitsWeek: 0, openIssues: 1 }], health: null, motivation: { date: "2026-09-30", text: "msg", source: "rule", createdAt: null }, suggestions: [], reminders: [{ id: "rem_aaaa", text: "Revisar PRs", at: "14:30", repeat: "weekdays", active: true }] } });
       if (req.url!.startsWith("/api/v1/sync/whoop")) return send(503, { error: { code: "INTEGRATION_UNAVAILABLE", message: "WHOOP ainda não conectado" } });
-      if (req.url!.startsWith("/api/v1/motivation") && req.method === "GET") return send(200, { version: 1, data: { date: "2026-09-30", text: "6 dias seguidos.", source: "rule" } });
+      if (req.url!.startsWith("/api/v1/motivation") && req.method === "GET") return send(200, { version: 1, data: { date: "2026-09-30", text: "6 dias seguidos.", source: "rule", createdAt: null } });
       send(404, { error: { code: "NOT_FOUND", message: "rota" } });
     });
   });

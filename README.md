@@ -7,7 +7,7 @@ Dashboard pessoal (single-user) para organizar a vida de programador. **Sem IA e
 - **CLI `forge`** com saída `--json` estável, exit codes documentados e 100% não interativa.
 
 ## Stack
-Next.js 15 (App Router) · TypeScript strict · Tailwind v4 · motion · Recharts · Prisma + SQLite · commander + tsup · Zod · Vitest · pnpm workspaces
+Next.js 15 (App Router) · TypeScript strict · Tailwind v4 · shadcn/ui · motion · Recharts · Prisma + SQLite · commander + tsup · Zod · Vitest · pnpm workspaces
 
 ```
 apps/web        UI + API (/api/v1)
@@ -31,7 +31,13 @@ forge auth login --url http://localhost:3000 --token <token>
 forge doctor
 ```
 
-Testes e checagens: `pnpm typecheck && pnpm test`.
+Testes e checagens: `pnpm lint && pnpm typecheck && pnpm test`.
+
+## Design system
+- **Componentes**: shadcn/ui (`apps/web/src/components/ui`). Adicione novos com `pnpm dlx shadcn@latest add <componente>` dentro de `apps/web`.
+- **Paleta e tipografia**: tokens em `apps/web/src/app/globals.css` (tema escuro único, acento laranja, verde/âmbar/vermelho só para status). Fonte: Bricolage Grotesque, pesos 400 / 500 / 600.
+- **Lint de design system**: `@shadcn/lint` está registrado no Oxlint (`apps/web/.oxlintrc.json`), **sem regras habilitadas**. Para impor a paleta, os tamanhos e os componentes, adicione regras em `"rules"` — veja as [regras disponíveis](https://github.com/shadcn-ui/lint/blob/main/README.md#rules). Rode com `pnpm lint`.
+- **Diretrizes de interface**: a UI foi revisada contra as [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines) (acessibilidade, foco, formulários, movimento reduzido, tipografia).
 
 ## CLI em 30 segundos
 ```bash

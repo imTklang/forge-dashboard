@@ -21,6 +21,7 @@ export function toDto(t: Row) {
     status: t.status,
     date: t.date,
     source: t.source,
+    createdAt: t.createdAt.toISOString(),
     subtasks: (t.subtasks ?? []).map((s) => ({ id: s.id, title: s.title, estimateMin: s.estimateMin, status: s.status })),
   };
 }

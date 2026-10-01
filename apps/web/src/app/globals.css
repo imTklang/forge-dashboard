@@ -1,26 +1,137 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-@theme {
-  --color-forge: #ff6b1a;
-  --color-ok: #34d399;
-  --color-warn: #fbbf24;
-  --color-bad: #f87171;
-  --color-info: #60a5fa;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Forge design tokens — tema único (escuro, grafite quente).
+ *
+ * Acento:   --primary (laranja da marca). Texto sobre ele usa --primary-foreground (escuro, contraste ≥ 7:1).
+ * Status:   --success / --warning / --destructive. Só para estado (recovery, prioridade, erro), nunca decoração.
+ * Neutros:  background → card → secondary/muted → accent, do mais escuro ao mais claro.
+ * Gráficos: chart-1 (acento) + 3 neutros quentes.
+ *
+ * Tipografia (Bricolage Grotesque), pesos: 400 corpo · 500 rótulos/botões · 600 títulos e números.
+ *   text-xs 12   legendas, metadados
+ *   text-sm 14   corpo, botões, campos
+ *   text-base 16 títulos de seção
+ *   text-2xl 24  título da página
+ *   text-4xl 36  métricas (tabular-nums)
+ * Raio: rounded-xl (campos/botões) · rounded-3xl (cartões). Espaçamento: escala 4 do Tailwind (gap-2/3/4/6).
+ */
+
+@theme inline {
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-html,
-body {
-  min-height: 100%;
+:root {
+  color-scheme: dark;
+  --radius: 0.625rem;
+
+  --background: oklch(0.16 0.006 55);
+  --foreground: oklch(0.96 0.004 80);
+  --card: oklch(0.22 0.008 55 / 0.55);
+  --card-foreground: oklch(0.96 0.004 80);
+  --popover: oklch(0.22 0.008 55);
+  --popover-foreground: oklch(0.96 0.004 80);
+
+  --primary: oklch(0.7 0.19 45);
+  --primary-foreground: oklch(0.18 0.01 50);
+  --secondary: oklch(0.27 0.008 55);
+  --secondary-foreground: oklch(0.96 0.004 80);
+  --muted: oklch(0.25 0.008 55);
+  --muted-foreground: oklch(0.74 0.012 70);
+  --accent: oklch(0.3 0.01 55);
+  --accent-foreground: oklch(0.96 0.004 80);
+
+  --destructive: oklch(0.7 0.18 22);
+  --success: oklch(0.76 0.15 160);
+  --warning: oklch(0.83 0.14 85);
+
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.7 0.19 45 / 70%);
+
+  --chart-1: oklch(0.7 0.19 45);
+  --chart-2: oklch(0.82 0.07 75);
+  --chart-3: oklch(0.62 0.03 260);
+  --chart-4: oklch(0.42 0.015 60);
 }
 
-body {
-  color: white;
-  background:
-    linear-gradient(rgba(10, 8, 7, 0.78), rgba(10, 8, 7, 0.88)),
-    radial-gradient(1200px 700px at 15% 10%, #6b3a1c 0%, transparent 60%),
-    radial-gradient(900px 600px at 90% 90%, #3a2a4a 0%, transparent 60%),
-    radial-gradient(800px 500px at 60% 40%, #2b1d14 0%, transparent 70%),
-    #120d0a;
-  background-attachment: fixed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground min-h-dvh antialiased;
+    background-image: radial-gradient(900px 500px at 12% -5%, oklch(0.7 0.19 45 / 0.1), transparent 70%);
+    background-attachment: fixed;
+  }
+  a,
+  button,
+  [role="button"],
+  input,
+  select {
+    touch-action: manipulation;
+  }
+  h1 {
+    @apply text-2xl font-semibold tracking-tight text-balance;
+  }
+  h2 {
+    @apply text-base font-semibold tracking-tight text-balance;
+  }
+  :focus-visible {
+    @apply ring-2 ring-ring outline-none;
+  }
+  select {
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

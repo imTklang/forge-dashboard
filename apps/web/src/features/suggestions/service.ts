@@ -18,6 +18,7 @@ const toDto = (s: Rowp) => ({
   energy: s.energy as "high" | "medium" | "low",
   date: s.date,
   accepted: !!s.acceptedTaskId,
+  createdAt: s.createdAt.toISOString(),
 });
 
 export async function listSuggestions(date = dateInTz()) {

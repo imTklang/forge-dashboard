@@ -15,5 +15,6 @@ jobs:
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @forge/web exec prisma generate
+      - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

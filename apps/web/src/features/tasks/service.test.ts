@@ -7,7 +7,7 @@ vi.mock("@/lib/db", () => ({ db: { task: { updateMany, findUnique, update }, pro
 
 const { rollOverDeferred, deferTask, completeTask } = await import("./service");
 
-const row = { id: "tsk_aaaa", title: "x", projectId: "p", project: { slug: "ideario" }, priority: "p2", estimateMin: null, status: "todo", date: "2026-09-30", source: "manual", subtasks: [] };
+const row = { id: "tsk_aaaa", title: "x", projectId: "p", project: { slug: "ideario" }, priority: "p2", estimateMin: null, status: "todo", date: "2026-09-30", source: "manual", createdAt: new Date("2026-09-30T10:00:00Z"), subtasks: [] };
 
 beforeEach(() => {
   vi.clearAllMocks();

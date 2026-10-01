@@ -6,12 +6,12 @@ import { fallbackMessage } from "./rules";
 
 export async function setMotivation(text: string, date = dateInTz()) {
   await db.dailyMessage.upsert({ where: { date }, update: { text }, create: { date, text } });
-  return { date, text, source: "agent" as const };
+  return { date, text, source: "agent" as const, createdAt: new Date().toISOString() };
 }
 
 export async function getMotivation(date = dateInTz()) {
   const row = await db.dailyMessage.findUnique({ where: { date } });
-  if (row) return { date, text: row.text, source: "agent" as const };
+  if (row) return { date, text: row.text, source: "agent" as const, createdAt: row.createdAt.toISOString() };
 
   const [streak, doneYesterday, openToday, projects] = await Promise.all([
     currentStreak(date),
@@ -21,5 +21,5 @@ export async function getMotivation(date = dateInTz()) {
   ]);
   const idle = projects.filter((p) => p.idleDays !== null).sort((a, b) => (b.idleDays ?? 0) - (a.idleDays ?? 0))[0];
   const text = fallbackMessage({ streak, doneYesterday, openToday, idleProject: idle ? { name: idle.name, days: idle.idleDays! } : null });
-  return { date, text, source: "rule" as const };
+  return { date, text, source: "rule" as const, createdAt: null };
 }

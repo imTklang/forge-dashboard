@@ -25,6 +25,7 @@ export const Task = z.object({
   status: TaskStatus,
   date: z.string(),
   source: Source,
+  createdAt: z.string(),
   subtasks: z.array(Subtask),
 });
 export type Task = z.infer<typeof Task>;
@@ -109,11 +110,12 @@ export const Suggestion = z.object({
   energy: Energy,
   date: z.string(),
   accepted: z.boolean(),
+  createdAt: z.string(),
 });
 
 export const MotivationSet = z.object({ text: z.string().min(1).max(280), date: IsoDate.optional() });
 
-export const Motivation = z.object({ date: z.string(), text: z.string(), source: z.enum(["agent", "rule"]) });
+export const Motivation = z.object({ date: z.string(), text: z.string(), source: z.enum(["agent", "rule"]), createdAt: z.string().nullable() });
 
 const HHmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "use HH:mm");
 
