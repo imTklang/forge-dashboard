@@ -26,8 +26,8 @@ function Row({ task, onDone, onDefer }: { task: TaskDto; onDone: () => void; onD
   return (
     <li
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn("flex items-center gap-3 rounded-2xl border bg-secondary/40 px-3 py-2.5", isDragging && "relative z-10 select-none ring-2 ring-ring")}
+      style={{ "--drag-transform": CSS.Transform.toString(transform), "--drag-transition": transition } as React.CSSProperties}
+      className={cn("sortable-item flex items-center gap-3 rounded-2xl border bg-secondary/40 px-3 py-2.5", isDragging && "relative z-10 select-none ring-2 ring-ring")}
     >
       <button type="button" aria-label={`Reordenar ${task.title}`} className="grid size-8 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-muted-foreground transition-colors hover:text-foreground" {...attributes} {...listeners}>
         <GripVertical aria-hidden="true" className="size-4" />
@@ -52,11 +52,9 @@ function Row({ task, onDone, onDefer }: { task: TaskDto; onDone: () => void; onD
         </p>
       </div>
       {task.source === "agent" && <AgentBadge at={task.createdAt} />}
-      <Badge variant={priorityVariant[task.priority]} className="uppercase">
-        {task.priority}
-      </Badge>
+      <Badge variant={priorityVariant[task.priority]}>{task.priority.toUpperCase()}</Badge>
       {!done && (
-        <Button variant="ghost" size="icon-sm" aria-label={`Adiar ${task.title} para amanhã`} onClick={onDefer} className="text-muted-foreground">
+        <Button variant="quiet" size="icon-sm" aria-label={`Adiar ${task.title} para amanhã`} onClick={onDefer}>
           <SkipForward aria-hidden="true" />
         </Button>
       )}
@@ -128,7 +126,7 @@ export function TaskList() {
 
   return (
     <Card>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent>
         <h2>Checklist de hoje</h2>
         <form onSubmit={add} className="flex flex-wrap gap-2">
           <Label htmlFor="new-task" className="sr-only">Nova tarefa</Label>
@@ -147,8 +145,8 @@ export function TaskList() {
         {error && <p role="alert" className="text-sm text-destructive">Não foi possível concluir a ação: {error}. Recarregue a página e tente de novo.</p>}
         {tasks === null ? (
           <div className="flex flex-col gap-2" aria-busy="true">
-            <Skeleton className="h-14 rounded-2xl" />
-            <Skeleton className="h-14 rounded-2xl" />
+            <Skeleton className="h-14" />
+            <Skeleton className="h-14" />
           </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>

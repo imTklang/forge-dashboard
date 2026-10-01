@@ -90,6 +90,17 @@
   --chart-4: oklch(0.42 0.015 60);
 }
 
+/* Respeita a área segura (notch/barra inferior) em telas full-bleed. */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Item arrastável do dnd-kit: valores dinâmicos chegam por variáveis CSS. */
+@utility sortable-item {
+  transform: var(--drag-transform);
+  transition: var(--drag-transition);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

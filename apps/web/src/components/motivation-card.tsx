@@ -14,8 +14,8 @@ export function MotivationCard() {
   }, []);
 
   return (
-    <Card className="border-primary/30 bg-primary/10">
-      <CardContent className="flex flex-col gap-3">
+    <Card variant="highlight">
+      <CardContent>
         <div className="flex items-center justify-between gap-2">
           <h2>Mensagem do dia</h2>
           {msg?.source === "agent" && <AgentBadge at={msg.createdAt} />}

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export function ConfirmButton({ icon: Icon, label, title, description, confirmLabel, onConfirm }: { icon: LucideIcon; label: string; title: string; description: string; confirmLabel: string; onConfirm: () => void | Promise<void> }) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="ghost" size="icon-sm" aria-label={label} className="text-muted-foreground hover:text-destructive" />}>
+      <AlertDialogTrigger render={<Button variant="quiet-destructive" size="icon-sm" aria-label={label} />}>
         <Icon aria-hidden="true" />
       </AlertDialogTrigger>
       <AlertDialogContent>

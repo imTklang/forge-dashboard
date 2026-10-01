@@ -64,7 +64,7 @@ export default function SettingsPage() {
       <PageHeader title="Configurações" />
 
       <Card>
-        <CardContent className="flex flex-col gap-4">
+        <CardContent>
           <div className="flex flex-col gap-1">
             <h2 className="flex items-center gap-2"><KeyRound aria-hidden="true" className="size-4" />Tokens da CLI</h2>
             <p className="text-sm text-muted-foreground">Use com <code translate="no">forge auth login</code>. O valor aparece só uma vez.</p>
@@ -72,10 +72,10 @@ export default function SettingsPage() {
           <form onSubmit={create} className="flex flex-wrap items-center gap-2">
             <Label htmlFor="token-name" className="sr-only">Nome do token</Label>
             <Input id="token-name" name="name" autoComplete="off" spellCheck={false} required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: claude-code…" className="min-w-0 flex-1 basis-48" />
-            <Label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input type="checkbox" checked={canWrite} onChange={(e) => setCanWrite(e.target.checked)} className="size-4 accent-primary" />
               Permitir escrita
-            </Label>
+            </label>
             <Button type="submit">Gerar token</Button>
           </form>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -102,7 +102,7 @@ export default function SettingsPage() {
       </Card>
 
       <Card>
-        <CardContent className="flex flex-col items-start gap-3">
+        <CardContent className="items-start">
           <div className="flex flex-col gap-1">
             <h2 className="flex items-center gap-2"><Bell aria-hidden="true" className="size-4" />Notificações</h2>
             <p className="text-sm text-muted-foreground">Receba seus lembretes como notificação do navegador.</p>
@@ -112,7 +112,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Button variant="ghost" className="self-start text-muted-foreground" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); location.href = "/login"; }}>
+      <Button variant="quiet" className="self-start" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); location.href = "/login"; }}>
         Sair
       </Button>
     </div>

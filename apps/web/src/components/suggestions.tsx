@@ -25,7 +25,7 @@ export function Suggestions() {
 
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3">
+      <CardContent>
         <h2>Sugestões de hoje</h2>
         {items.length === 0 && <p className="py-4 text-center text-sm text-muted-foreground">Sem sugestões por enquanto. Seu agente cria com <code translate="no">forge suggestions add</code>.</p>}
         <ul className="flex flex-col gap-2">

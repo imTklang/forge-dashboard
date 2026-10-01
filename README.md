@@ -36,7 +36,7 @@ Testes e checagens: `pnpm lint && pnpm typecheck && pnpm test`.
 ## Design system
 - **Componentes**: shadcn/ui (`apps/web/src/components/ui`). Adicione novos com `pnpm dlx shadcn@latest add <componente>` dentro de `apps/web`.
 - **Paleta e tipografia**: tokens em `apps/web/src/app/globals.css` (tema escuro único, acento laranja, verde/âmbar/vermelho só para status). Fonte: Bricolage Grotesque, pesos 400 / 500 / 600.
-- **Lint de design system**: `@shadcn/lint` está registrado no Oxlint (`apps/web/.oxlintrc.json`), **sem regras habilitadas**. Para impor a paleta, os tamanhos e os componentes, adicione regras em `"rules"` — veja as [regras disponíveis](https://github.com/shadcn-ui/lint/blob/main/README.md#rules). Rode com `pnpm lint`.
+- **Lint de design system**: `@shadcn/lint` (via Oxlint, `apps/web/.oxlintrc.json`) com as seis regras ligadas: `no-restyle` (só layout pode ser ajustado via `className`), `no-raw-colors`, `no-arbitrary-values`, `no-inline-styles`, `no-unknown-classes` e `require-static-classes`. Os componentes de `src/components/ui` são a fonte da verdade e ficam fora da checagem. Precisa de uma variação nova? Crie uma *variant* no componente (ex.: `Button variant="quiet"`, `Card variant="highlight"`) em vez de passar classes. Rode com `pnpm lint`.
 - **Diretrizes de interface**: a UI foi revisada contra as [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines) (acessibilidade, foco, formulários, movimento reduzido, tipografia).
 
 ## CLI em 30 segundos

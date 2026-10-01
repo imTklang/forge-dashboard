@@ -23,7 +23,7 @@ export function ProjectsView() {
   if (!projects) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy="true">
-        {Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-36 rounded-3xl" />)}
+        {Array.from({ length: 3 }, (_, i) => <Skeleton key={i} shape="card" className="h-36" />)}
       </div>
     );
   }
@@ -33,7 +33,7 @@ export function ProjectsView() {
       {projects.map((p) => (
         <li key={p.slug}>
           <Card className="h-full">
-            <CardContent className="flex flex-col gap-3">
+            <CardContent>
               <div className="flex items-center justify-between gap-2">
                 <h2 className="truncate">{p.name}</h2>
                 {p.idleDays !== null && <IdleBadge days={p.idleDays} />}

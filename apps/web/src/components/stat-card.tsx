@@ -26,7 +26,7 @@ export function StatCard({ title, value, unit, decimals = 0, icon: Icon, tone = 
   return (
     <motion.div whileHover={{ y: -2 }} className="h-full">
       <Card className="h-full">
-        <CardContent className="flex flex-col gap-2">
+        <CardContent>
           <div className="flex items-center justify-between text-muted-foreground">
             <p className="text-sm font-medium">{title}</p>
             <Icon aria-hidden="true" className="size-4" />

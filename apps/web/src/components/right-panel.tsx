@@ -84,13 +84,13 @@ export function RightPanel() {
   return (
     <aside aria-label="Calendário e lembretes" className="flex w-full flex-col gap-4 xl:w-80 xl:shrink-0">
       <Card>
-        <CardContent className="flex flex-col gap-3">
+        <CardContent>
           <Calendar summary={summary} />
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="flex flex-col gap-3">
+        <CardContent>
           <h2>Agendados</h2>
           {reminders.length === 0 && <p className="text-sm text-muted-foreground">Nenhum lembrete.</p>}
           <ul className="flex flex-col gap-2">

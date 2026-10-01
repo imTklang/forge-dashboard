@@ -28,7 +28,7 @@ export function HealthView() {
       </section>
 
       <Card>
-        <CardContent className="flex flex-col gap-4">
+        <CardContent>
           <h2>Recovery e HRV · 30 dias</h2>
           <div className="h-56" role="img" aria-label="Gráfico de recovery e HRV dos últimos 30 dias">
             <ResponsiveContainer width="100%" height="100%">
@@ -56,17 +56,17 @@ export function HealthView() {
       </Card>
 
       <Card>
-        <CardContent className="flex flex-col gap-4">
+        <CardContent>
           <h2>Estágios do sono</h2>
           <div className="flex h-3 overflow-hidden rounded-full" role="img" aria-label={`Estágios do sono: ${h.sleepStages.map((s) => `${s.name} ${hm(s.min)}`).join(", ")}`}>
             {h.sleepStages.map((s) => (
-              <div key={s.name} style={{ width: `${(s.min / total) * 100}%`, background: s.color }} />
+              <div key={s.name} className="w-(--w) bg-(--c)" style={{ "--w": `${(s.min / total) * 100}%`, "--c": s.color } as React.CSSProperties} />
             ))}
           </div>
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {h.sleepStages.map((s) => (
               <li key={s.name} className="flex items-center gap-1.5">
-                <i aria-hidden="true" className="size-2 rounded-full" style={{ background: s.color }} />
+                <i aria-hidden="true" className="size-2 rounded-full bg-(--c)" style={{ "--c": s.color } as React.CSSProperties} />
                 {s.name} <span className="tabular-nums">{hm(s.min)}</span>
               </li>
             ))}
