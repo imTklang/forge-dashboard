@@ -35,7 +35,7 @@ function Calendar({ summary }: { summary: Summary | null }) {
   return (
     <>
       <h2 className="first-letter:uppercase">{label}</h2>
-      <div className="grid grid-cols-7 gap-1 text-center text-xs">
+      <div className="grid grid-cols-7 gap-x-1 gap-y-2.5 text-center text-xs">
         {Array.from({ length: 7 }, (_, i) => (
           <abbr key={i} title={weekdayLong(i)} className="py-1 text-muted-foreground no-underline">{weekdayNarrow(i)}</abbr>
         ))}
