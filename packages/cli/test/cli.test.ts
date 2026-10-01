@@ -30,7 +30,7 @@ beforeAll(async () => {
       if (req.url === "/api/v1/tasks/tsk_nope/done") return send(404, { error: { code: "NOT_FOUND", message: "Tarefa 'tsk_nope' não encontrada" } });
       if (req.url!.startsWith("/api/v1/tasks") && req.method === "GET") return send(200, { version: 1, data: [task] });
       if (req.url === "/api/v1/tasks" && req.method === "POST") return send(201, { version: 1, data: { ...task, ...JSON.parse(body) } });
-      if (req.url!.startsWith("/api/v1/context")) return send(200, { version: 1, data: { date: "2026-09-30", streak: 3, tasks: [task], projects: [{ slug: "portfolio", name: "Portfólio", color: "#f00", repo: null, openTasks: 1, idleDays: 9, lastCommit: { at: "2026-09-21T10:00:00Z", message: "style: hero" }, commitsWeek: 0, openIssues: 1 }], health: null, motivation: { date: "2026-09-30", text: "msg", source: "rule" }, suggestions: [], reminders: [] } });
+      if (req.url!.startsWith("/api/v1/context")) return send(200, { version: 1, data: { date: "2026-09-30", streak: 3, tasks: [task], projects: [{ slug: "portfolio", name: "Portfólio", color: "#f00", repo: null, openTasks: 1, idleDays: 9, lastCommit: { at: "2026-09-21T10:00:00Z", message: "style: hero" }, commitsWeek: 0, openIssues: 1 }], health: null, motivation: { date: "2026-09-30", text: "msg", source: "rule" }, suggestions: [], reminders: [{ id: "rem_aaaa", text: "Revisar PRs", at: "14:30", repeat: "weekdays", active: true }] } });
       if (req.url!.startsWith("/api/v1/sync/whoop")) return send(503, { error: { code: "INTEGRATION_UNAVAILABLE", message: "WHOOP ainda não conectado" } });
       if (req.url!.startsWith("/api/v1/motivation") && req.method === "GET") return send(200, { version: 1, data: { date: "2026-09-30", text: "6 dias seguidos.", source: "rule" } });
       send(404, { error: { code: "NOT_FOUND", message: "rota" } });
@@ -183,6 +183,23 @@ describe("sugestões, motivação e integrações", () => {
 
   it("projects update --repo inválido → exit 2", async () => {
     expect((await run(["projects", "update", "ideario", "--repo", "sem-barra", "--json"])).code).toBe(2);
+  });
+});
+
+describe("lembretes", () => {
+  it("reminders add --dry-run valida e mostra o corpo", async () => {
+    const r = await run(["reminders", "add", "Revisar PRs", "--at", "14:30", "--repeat", "weekdays", "--dry-run", "--json"]);
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.stdout).data.body).toEqual({ text: "Revisar PRs", at: "14:30", repeat: "weekdays" });
+  });
+  it("horário inválido → exit 2", async () => {
+    expect((await run(["reminders", "add", "x", "--at", "25:99", "--json"])).code).toBe(2);
+  });
+  it("repeat inválido → exit 2", async () => {
+    expect((await run(["reminders", "add", "x", "--at", "10:00", "--repeat", "mensal", "--json"])).code).toBe(2);
+  });
+  it("context md lista lembretes", async () => {
+    expect((await run(["context", "--format", "md"])).stdout).toContain("14:30 Revisar PRs (weekdays)");
   });
 });
 

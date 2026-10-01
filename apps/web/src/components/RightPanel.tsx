@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Flame, MoreHorizontal } from "lucide-react";
+import { Flame, MoreHorizontal, Plus, X } from "lucide-react";
 import { GlassCard } from "./GlassCard";
 import { mock } from "@/features/mock";
 import { cn } from "@/lib/cn";
 import { api } from "@/lib/client";
 
+type Reminder = { id: string; text: string; at: string; repeat: string; active: boolean };
+const repeatLabel: Record<string, string> = { none: "Uma vez", daily: "Diário", weekdays: "Dias úteis" };
 const weekdays = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 function heatClass(n: number | undefined) {
@@ -18,7 +20,20 @@ function heatClass(n: number | undefined) {
 }
 
 export function RightPanel() {
-  const { user, scheduled } = mock;
+  const { user } = mock;
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [text, setText] = useState("");
+  const [time, setTime] = useState("09:00");
+  const [repeat, setRepeat] = useState("none");
+  const loadReminders = () => api<Reminder[]>("/reminders").then(setReminders).catch(() => {});
+  useEffect(() => { void loadReminders(); }, []);
+  async function addReminder(e: React.FormEvent) {
+    e.preventDefault();
+    if (!text.trim()) return;
+    await api("/reminders", { method: "POST", body: JSON.stringify({ text, at: time, repeat }) });
+    setText("");
+    await loadReminders();
+  }
   const [summary, setSummary] = useState<{ streak: number; heat: Record<string, number> }>({ streak: 0, heat: {} });
   useEffect(() => { api<typeof summary>("/summary").then(setSummary).catch(() => {}); }, []);
   const today = new Date();
@@ -70,25 +85,34 @@ export function RightPanel() {
       <GlassCard className="p-5">
         <div className="mb-3 flex items-center justify-between">
           <p className="border-l-2 border-forge pl-2 text-sm font-semibold">Agendados</p>
-          <span className="text-[11px] text-white/40">ver todos</span>
-        </div>
+                  </div>
         <div className="flex flex-col gap-2">
-          {scheduled.map((r, i) => (
+          {reminders.map((r, i) => (
             <motion.div
               key={r.id}
               initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.15 + i * 0.08 }}
               whileHover={{ y: -2 }}
-              className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2"
+              className={cn("flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2", !r.active && "opacity-40")}
             >
-              <div>
-                <p className="text-xs font-semibold">{r.text}</p>
-                <p className="text-[10px] text-white/40">{r.repeat}</p>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold">{r.text}</p>
+                <p className="text-[10px] text-white/40">{repeatLabel[r.repeat]}{!r.active && " · concluído"}</p>
               </div>
-              <span className="text-xs font-bold text-forge">{r.time}</span>
+              <span className="text-xs font-bold text-forge">{r.at}</span>
+              <button aria-label="Remover" onClick={async () => { await api(`/reminders/${r.id}`, { method: "DELETE" }); await loadReminders(); }} className="text-white/30 hover:text-bad"><X size={13} /></button>
             </motion.div>
           ))}
+          {!reminders.length && <p className="py-2 text-center text-[11px] text-white/40">Nenhum lembrete.</p>}
+          <form onSubmit={addReminder} className="mt-1 flex flex-wrap gap-1.5">
+            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Novo lembrete…" className="min-w-0 flex-1 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[11px] outline-none" />
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="rounded-full border border-white/10 bg-black/20 px-2 text-[11px] outline-none" />
+            <select value={repeat} onChange={(e) => setRepeat(e.target.value)} className="rounded-full border border-white/10 bg-black/20 px-2 text-[11px] outline-none">
+              <option value="none" className="text-black">Uma vez</option><option value="daily" className="text-black">Diário</option><option value="weekdays" className="text-black">Dias úteis</option>
+            </select>
+            <button aria-label="Adicionar lembrete" className="grid size-7 place-items-center rounded-full bg-forge"><Plus size={13} /></button>
+          </form>
         </div>
       </GlassCard>
     </aside>

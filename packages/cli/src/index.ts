@@ -1,6 +1,6 @@
 import { Command, CommanderError } from "commander";
 import { z } from "zod";
-import { Context, Motivation, MotivationSet, ProjectSummary, ProjectUpdate, Suggestion, SuggestionInput, SubtasksInput, Task, TaskCreate, TaskUpdate } from "@forge/core";
+import { Context, Motivation, Reminder, ReminderCreate, MotivationSet, ProjectSummary, ProjectUpdate, Suggestion, SuggestionInput, SubtasksInput, Task, TaskCreate, TaskUpdate } from "@forge/core";
 import { CliError, EXIT, configPath, printData, printError, readStdinJson, request, resolveConfig, saveConfig, table } from "./lib";
 
 type T = z.infer<typeof Task>;
@@ -66,6 +66,7 @@ function contextMd(c: Context) {
   lines.push("", "## Projetos", ...c.projects.map((p) => `- ${p.slug}: ${p.openTasks} abertas${p.idleDays !== null ? `, ${p.idleDays}d sem commit` : ""}${p.lastCommit ? ` (último: ${p.lastCommit.message})` : ""}`));
   lines.push("", `Mensagem do dia (${c.motivation.source === "agent" ? "agente" : "regra"}): ${c.motivation.text}`);
   lines.push("", "## Sugestões já existentes", ...(c.suggestions.length ? c.suggestions.map((x) => `- [${x.id}] ${x.title} (${x.energy}${x.accepted ? ", aceita" : ""})`) : ["(nenhuma)"]));
+  lines.push("", "## Lembretes", ...(c.reminders.length ? c.reminders.map((r) => `- ${r.at} ${r.text} (${r.repeat})`) : ["(nenhum)"]));
   lines.push("", `Saúde: ${c.health ? "disponível" : "sem dados (WHOOP não conectado)"}`);
   return lines.join("\n");
 }
@@ -254,6 +255,34 @@ sync.command("whoop").action(async () => {
   printData(d, json(), () => JSON.stringify(d));
 });
 
+// ---------- reminders ----------
+type Rem = z.infer<typeof Reminder>;
+const reminders = program.command("reminders").description("Lembretes (notificação Web Push)");
+
+reminders.command("list").action(async () => {
+  const list = parse(z.array(Reminder), await request("GET", "/reminders"));
+  printData(list, json(), () => (list.length ? table([["ID", "HORA", "REPETE", "ATIVO", "TEXTO"], ...list.map((r) => [r.id, r.at, r.repeat, r.active ? "sim" : "não", r.text])]) : "(nenhum lembrete)"));
+});
+
+reminders
+  .command("add <text>")
+  .requiredOption("--at <HH:mm>", "horário (America/Fortaleza)")
+  .option("--repeat <mode>", "daily | weekdays | none", "none")
+  .option("--dry-run")
+  .action(async (text: string, o: { at: string; repeat: string; dryRun?: boolean }) => {
+    const body = parse(ReminderCreate, { text, at: o.at, repeat: o.repeat });
+    const out = await write<Rem>(o, "POST", "/reminders", body);
+    printData(out, json(), () => ("dryRun" in out ? `[dry-run] ${JSON.stringify(out)}` : `${out.id}  ${out.at}  ${out.repeat}  ${out.text}`));
+  });
+
+reminders
+  .command("remove <id>")
+  .option("--dry-run")
+  .action(async (id: string, o: { dryRun?: boolean }) => {
+    const out = await write<{ id: string }>(o, "DELETE", `/reminders/${id}`, undefined);
+    printData(out, json(), () => ("dryRun" in out ? `[dry-run] ${JSON.stringify(out)}` : `${out.id} removido`));
+  });
+
 // ---------- schema ----------
 const SCHEMAS: Record<string, { input?: z.ZodType; output: z.ZodType }> = {
   context: { output: Context },
@@ -269,6 +298,8 @@ const SCHEMAS: Record<string, { input?: z.ZodType; output: z.ZodType }> = {
   "suggestions add": { input: SuggestionInput, output: z.array(Suggestion) },
   "motivation set": { input: MotivationSet, output: Motivation },
   "motivation get": { output: Motivation },
+  "reminders list": { output: z.array(Reminder) },
+  "reminders add": { input: ReminderCreate, output: Reminder },
 };
 
 program

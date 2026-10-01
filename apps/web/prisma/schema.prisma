@@ -70,3 +70,20 @@ model DailyMessage {
   text      String
   createdAt DateTime @default(now())
 }
+
+model Reminder {
+  id            String  @id
+  text          String
+  timeOfDay     String // HH:mm (America/Fortaleza)
+  repeat        String  @default("none") // none | daily | weekdays
+  active        Boolean @default(true)
+  lastFiredDate String? // YYYY-MM-DD do último disparo
+  createdAt     DateTime @default(now())
+}
+
+model PushSubscription {
+  endpoint  String   @id
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}

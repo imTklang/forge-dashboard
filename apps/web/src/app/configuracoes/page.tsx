@@ -1,9 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Copy, KeyRound, Trash2 } from "lucide-react";
+import { Bell, Copy, KeyRound, Trash2 } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { api as call } from "@/lib/client";
+
+function urlBase64ToUint8Array(b64: string) {
+  const raw = atob((b64 + "=".repeat((4 - (b64.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+}
 
 type Tok = { id: string; name: string; scopes: string[]; lastUsedAt: string | null; revoked: boolean };
 
@@ -12,6 +17,22 @@ export default function Settings() {
   const [name, setName] = useState("");
   const [write, setWrite] = useState(true);
   const [fresh, setFresh] = useState("");
+  const [push, setPush] = useState("");
+
+  async function enablePush() {
+    try {
+      const { publicKey } = (await (await fetch("/api/push/key")).json()).data as { publicKey: string | null };
+      if (!publicKey) return setPush("VAPID não configurado no servidor (veja .env.example).");
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return setPush("Este navegador não suporta Web Push.");
+      if ((await Notification.requestPermission()) !== "granted") return setPush("Permissão negada.");
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) });
+      await fetch("/api/push/subscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(sub) });
+      setPush("Notificações ativadas neste dispositivo.");
+    } catch {
+      setPush("Não foi possível ativar as notificações.");
+    }
+  }
 
   const load = useCallback(async () => setTokens(await call<Tok[]>("/tokens")), []);
   useEffect(() => { void load(); }, [load]);
@@ -50,6 +71,12 @@ export default function Settings() {
             </div>
           ))}
         </div>
+      </GlassCard>
+      <GlassCard className="mt-4 p-6">
+        <p className="mb-1 flex items-center gap-2 text-sm font-semibold"><Bell size={14} />Notificações</p>
+        <p className="mb-3 text-xs text-white/50">Receba seus lembretes como notificação do navegador.</p>
+        <button onClick={enablePush} className="rounded-full bg-forge px-4 py-2 text-xs font-semibold">Ativar neste dispositivo</button>
+        {push && <p className="mt-2 text-xs text-white/60">{push}</p>}
       </GlassCard>
       <button onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); location.href = "/login"; }} className="mt-4 text-xs text-white/50">Sair</button>
     </main>

@@ -115,6 +115,29 @@ export const MotivationSet = z.object({ text: z.string().min(1).max(280), date: 
 
 export const Motivation = z.object({ date: z.string(), text: z.string(), source: z.enum(["agent", "rule"]) });
 
+const HHmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "use HH:mm");
+
+export const ReminderCreate = z.object({
+  text: z.string().min(1).max(200),
+  at: HHmm,
+  repeat: Repeat.default("none"),
+});
+
+export const ReminderUpdate = z.object({
+  text: z.string().min(1).max(200).optional(),
+  at: HHmm.optional(),
+  repeat: Repeat.optional(),
+  active: z.boolean().optional(),
+});
+
+export const Reminder = z.object({
+  id: z.string(),
+  text: z.string(),
+  at: z.string(),
+  repeat: Repeat,
+  active: z.boolean(),
+});
+
 export const Context = z.object({
   date: z.string(),
   streak: z.number(),
@@ -123,6 +146,6 @@ export const Context = z.object({
   health: z.unknown().nullable(),
   motivation: Motivation,
   suggestions: z.array(Suggestion),
-  reminders: z.array(z.unknown()),
+  reminders: z.array(Reminder),
 });
 export type Context = z.infer<typeof Context>;
