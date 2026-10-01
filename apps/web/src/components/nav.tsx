@@ -18,10 +18,10 @@ export function Nav() {
 
   return (
     <nav aria-label="Principal" className="fixed inset-x-3 bottom-3 z-40 pb-safe lg:static lg:inset-auto lg:pb-0">
-      <ul className="flex justify-around gap-1 rounded-3xl border bg-card p-1.5 backdrop-blur-xl lg:sticky lg:top-5 lg:h-fit lg:flex-col lg:justify-start lg:py-4">
+      <ul className="flex justify-around gap-1 rounded-3xl border bg-card p-1.5 backdrop-blur-xl lg:h-full lg:flex-col lg:justify-start lg:py-4">
         <li className="hidden px-3 pb-2 text-lg font-semibold tracking-tight text-primary lg:block" aria-hidden="true" translate="no">F</li>
         {items.map(({ href, label, icon: Icon }) => (
-          <li key={href} className="flex-1 lg:flex-none">
+          <li key={href} className={cn("flex-1 lg:flex-none", href === "/configuracoes" && "lg:mt-auto")}>
             <Link
               href={href}
               aria-current={isActive(href) ? "page" : undefined}
