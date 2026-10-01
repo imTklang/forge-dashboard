@@ -44,7 +44,7 @@ function Calendar({ summary }: { summary: Summary | null }) {
           const d = i + 1;
           const n = summary.heat[iso(d)] ?? 0;
           return (
-            <span key={d} title={`Dia ${d}: ${n} ${n === 1 ? "tarefa concluída" : "tarefas concluídas"}`} className={cn("grid aspect-square place-items-center rounded-full tabular-nums", level(n), d === today && "ring-2 ring-foreground")}>
+            <span key={d} title={`Dia ${d}: ${n} ${n === 1 ? "tarefa concluída" : "tarefas concluídas"}`} className={cn("mx-auto grid size-8 place-items-center rounded-full tabular-nums", level(n), d === today && "ring-2 ring-foreground")}>
               {d}
             </span>
           );
