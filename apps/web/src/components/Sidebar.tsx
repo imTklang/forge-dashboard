@@ -24,7 +24,7 @@ export function Sidebar({ active, onChange }: { active: number; onChange: (i: nu
             aria-label={label}
             title={label}
             whileHover={{ scale: 1.1 }}
-            onClick={() => onChange(i < 3 ? i : active)}
+            onClick={() => (i === 4 ? (location.href = "/configuracoes") : onChange(i < 3 ? i : active))}
             className={cn(
               "grid size-10 place-items-center rounded-full text-white/60 transition-colors",
               i === active && "bg-forge text-white shadow-lg shadow-forge/40",
@@ -40,7 +40,7 @@ export function Sidebar({ active, onChange }: { active: number; onChange: (i: nu
           <button
             key={label}
             aria-label={label}
-            onClick={() => onChange(i < 3 ? i : active)}
+            onClick={() => (i === 4 ? (location.href = "/configuracoes") : onChange(i < 3 ? i : active))}
             className={cn("grid size-10 place-items-center rounded-full text-white/60", i === active && "bg-forge text-white")}
           >
             <Icon size={18} />

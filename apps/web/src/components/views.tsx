@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Activity, Moon, Zap, HeartPulse, GitCommit, CircleAlert, Plus, Check } from "lucide-react";
+import { Activity, Moon, Zap, HeartPulse, GitCommit, CircleAlert, Plus } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { GlassCard } from "./GlassCard";
 import { StatCard } from "./StatCard";
 import { AgentBadge } from "./AgentBadge";
+import { TaskList } from "./TaskList";
 import { mock } from "@/features/mock";
 import { cn } from "@/lib/cn";
 
@@ -25,33 +26,11 @@ function StatsRow() {
   );
 }
 
-const prioColor = { p1: "bg-bad/20 text-bad", p2: "bg-warn/20 text-warn", p3: "bg-info/20 text-info" } as const;
-
 export function TodayView() {
   return (
     <div className="flex flex-col gap-4">
       <StatsRow />
-      <GlassCard className="p-5" {...stagger(4)}>
-        <div className="mb-3 flex items-center justify-between">
-          <p className="border-l-2 border-forge pl-2 text-sm font-semibold">Checklist de hoje</p>
-          <span className="text-[11px] text-white/40">arraste para reordenar (Fase 2)</span>
-        </div>
-        <div className="flex flex-col gap-2">
-          {mock.tasks.map((t) => (
-            <motion.div key={t.id} whileHover={{ y: -2 }} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <span className={cn("grid size-5 place-items-center rounded-full border border-white/30", t.status === "done" && "border-ok bg-ok text-black")}>
-                {t.status === "done" && <Check size={12} />}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className={cn("truncate text-sm font-medium", t.status === "done" && "text-white/40 line-through")}>{t.title}</p>
-                <p className="text-[11px] text-white/40">{t.project} · {t.estimate} min · {t.id}</p>
-              </div>
-              {t.source === "agent" && <AgentBadge at="07:42" />}
-              <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase", prioColor[t.priority as keyof typeof prioColor])}>{t.priority}</span>
-            </motion.div>
-          ))}
-        </div>
-      </GlassCard>
+      <TaskList />
       <div className="grid gap-4 md:grid-cols-2">
         <GlassCard className="bg-forge/90 p-5" hover {...stagger(5)}>
           <div className="flex items-center justify-between"><p className="text-sm font-semibold">Mensagem do dia</p><AgentBadge at={mock.message.at} /></div>

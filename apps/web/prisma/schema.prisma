@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        String @id
+  slug      String @unique
+  name      String
+  color     String @default("#ff6b1a")
+  repoOwner String?
+  repoName  String?
+  tasks     Task[]
+}
+
+model Task {
+  id            String   @id
+  title         String
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id])
+  priority      String   @default("p2") // p1 | p2 | p3
+  estimateMin   Int?
+  status        String   @default("todo") // todo | doing | done | deferred
+  date          String // YYYY-MM-DD (America/Fortaleza)
+  position      Int      @default(0)
+  source        String   @default("manual") // manual | agent
+  completedDate String? // YYYY-MM-DD, base do streak
+  parentId      String?
+  parent        Task?    @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks      Task[]   @relation("Subtasks")
+  createdAt     DateTime @default(now())
+}
+
+model ApiToken {
+  id         String    @id
+  name       String
+  hash       String    @unique // SHA-256 do token
+  scopes     String // "read,write"
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
