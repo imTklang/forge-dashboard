@@ -9,6 +9,13 @@ export const Energy = z.enum(["high", "medium", "low"]);
 export const Source = z.enum(["manual", "agent"]);
 export const Repeat = z.enum(["none", "daily", "weekdays"]);
 
+export const Subtask = z.object({
+  id: z.string(),
+  title: z.string(),
+  estimateMin: z.number().nullable(),
+  status: TaskStatus,
+});
+
 export const Task = z.object({
   id: z.string(),
   title: z.string().min(1),
@@ -18,6 +25,7 @@ export const Task = z.object({
   status: TaskStatus,
   date: z.string(),
   source: Source,
+  subtasks: z.array(Subtask),
 });
 export type Task = z.infer<typeof Task>;
 
@@ -63,3 +71,22 @@ export const TokenCreate = z.object({
   name: z.string().min(1).max(60),
   scopes: z.array(z.enum(["read", "write"])).min(1).default(["read", "write"]),
 });
+
+export const ProjectSummary = z.object({
+  slug: z.string(),
+  name: z.string(),
+  color: z.string(),
+  repo: z.string().nullable(),
+  openTasks: z.number(),
+});
+
+export const Context = z.object({
+  date: z.string(),
+  streak: z.number(),
+  tasks: z.array(Task),
+  projects: z.array(ProjectSummary),
+  health: z.unknown().nullable(),
+  suggestions: z.array(z.unknown()),
+  reminders: z.array(z.unknown()),
+});
+export type Context = z.infer<typeof Context>;

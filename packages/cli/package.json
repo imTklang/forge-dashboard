@@ -1,0 +1,15 @@
+{
+  "name": "@forge/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": { "forge": "./dist/index.js" },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "tsup && vitest run"
+  },
+  "dependencies": { "@forge/core": "workspace:*", "commander": "^14.0.0", "zod": "^4.0.0" },
+  "devDependencies": { "@types/node": "^22.0.0", "tsup": "^8.0.0", "typescript": "^5.6.0", "vitest": "^3.0.0" }
+}
