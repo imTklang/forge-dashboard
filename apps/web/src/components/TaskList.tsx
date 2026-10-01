@@ -8,17 +8,11 @@ import { Check, GripVertical, Plus, SkipForward } from "lucide-react";
 import { GlassCard } from "./GlassCard";
 import { AgentBadge } from "./AgentBadge";
 import { cn } from "@/lib/cn";
+import { api, TASKS_CHANGED } from "@/lib/client";
 
 type TaskDto = { id: string; title: string; project: string; priority: "p1" | "p2" | "p3"; estimateMin: number | null; status: string; source: string };
 
 const prio = { p1: "bg-bad/20 text-bad", p2: "bg-warn/20 text-warn", p3: "bg-info/20 text-info" } as const;
-
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`/api/v1${path}`, { ...init, headers: { "content-type": "application/json" } });
-  const body = await res.json();
-  if (!res.ok) throw new Error(body.error?.message ?? "erro");
-  return body.data as T;
-}
 
 function Row({ t, onDone, onDefer }: { t: TaskDto; onDone: () => void; onDefer: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: t.id });
@@ -55,7 +49,11 @@ export function TaskList() {
       setError((e as Error).message);
     }
   }, []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    window.addEventListener(TASKS_CHANGED, load);
+    return () => window.removeEventListener(TASKS_CHANGED, load);
+  }, [load]);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();

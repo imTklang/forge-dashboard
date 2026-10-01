@@ -14,7 +14,14 @@ model Project {
   color     String @default("#ff6b1a")
   repoOwner String?
   repoName  String?
-  tasks     Task[]
+  // snapshot do GitHub (preenchido por `forge sync github`)
+  lastCommitAt  DateTime?
+  lastCommitMsg String?
+  commitsWeek   Int       @default(0)
+  openIssues    Int       @default(0)
+  syncedAt      DateTime?
+  tasks       Task[]
+  suggestions Suggestion[]
 }
 
 model Task {
@@ -43,4 +50,23 @@ model ApiToken {
   lastUsedAt DateTime?
   revokedAt  DateTime?
   createdAt  DateTime  @default(now())
+}
+
+model Suggestion {
+  id             String   @id
+  title          String
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id])
+  reason         String
+  estimateMin    Int?
+  energy         String   @default("medium") // high | medium | low
+  date           String
+  acceptedTaskId String?
+  createdAt      DateTime @default(now())
+}
+
+model DailyMessage {
+  date      String   @id
+  text      String
+  createdAt DateTime @default(now())
 }

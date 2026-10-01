@@ -30,7 +30,9 @@ beforeAll(async () => {
       if (req.url === "/api/v1/tasks/tsk_nope/done") return send(404, { error: { code: "NOT_FOUND", message: "Tarefa 'tsk_nope' não encontrada" } });
       if (req.url!.startsWith("/api/v1/tasks") && req.method === "GET") return send(200, { version: 1, data: [task] });
       if (req.url === "/api/v1/tasks" && req.method === "POST") return send(201, { version: 1, data: { ...task, ...JSON.parse(body) } });
-      if (req.url!.startsWith("/api/v1/context")) return send(200, { version: 1, data: { date: "2026-09-30", streak: 3, tasks: [task], projects: [{ slug: "portfolio", name: "Portfólio", color: "#f00", repo: null, openTasks: 1 }], health: null, suggestions: [], reminders: [] } });
+      if (req.url!.startsWith("/api/v1/context")) return send(200, { version: 1, data: { date: "2026-09-30", streak: 3, tasks: [task], projects: [{ slug: "portfolio", name: "Portfólio", color: "#f00", repo: null, openTasks: 1, idleDays: 9, lastCommit: { at: "2026-09-21T10:00:00Z", message: "style: hero" }, commitsWeek: 0, openIssues: 1 }], health: null, motivation: { date: "2026-09-30", text: "msg", source: "rule" }, suggestions: [], reminders: [] } });
+      if (req.url!.startsWith("/api/v1/sync/whoop")) return send(503, { error: { code: "INTEGRATION_UNAVAILABLE", message: "WHOOP ainda não conectado" } });
+      if (req.url!.startsWith("/api/v1/motivation") && req.method === "GET") return send(200, { version: 1, data: { date: "2026-09-30", text: "6 dias seguidos.", source: "rule" } });
       send(404, { error: { code: "NOT_FOUND", message: "rota" } });
     });
   });
@@ -144,6 +146,43 @@ describe("escrita", () => {
     expect(bad.code).toBe(2);
     const dry = await run(["tasks", "subtasks", "add", "tsk_aaaa", "--stdin", "--dry-run", "--json"], { stdin: '[{"title":"a","estimate":5}]' });
     expect(JSON.parse(dry.stdout).data.body).toEqual([{ title: "a", estimate: 5 }]);
+  });
+});
+
+describe("sugestões, motivação e integrações", () => {
+  it("suggestions add --stdin --dry-run valida e não envia", async () => {
+    const before = seen.length;
+    const r = await run(["suggestions", "add", "--stdin", "--dry-run", "--json"], { stdin: '[{"title":"Landing","project":"portfolio","reason":"parado","energy":"high","estimate":90}]' });
+    expect(r.code).toBe(0);
+    expect(seen.length).toBe(before);
+    expect(JSON.parse(r.stdout).data.body[0]).toMatchObject({ title: "Landing", energy: "high", estimate: 90 });
+  });
+
+  it("suggestions add rejeita energia inválida (exit 2)", async () => {
+    const r = await run(["suggestions", "add", "--stdin", "--json"], { stdin: '[{"title":"x","reason":"y","energy":"enorme"}]' });
+    expect(r.code).toBe(2);
+    expect(r.stdout).toBe("");
+  });
+
+  it("motivation set --dry-run e motivation get", async () => {
+    const dry = await run(["motivation", "set", "Hoje foco no portfólio", "--dry-run", "--json"]);
+    expect(JSON.parse(dry.stdout).data).toMatchObject({ dryRun: true, method: "PUT", body: { text: "Hoje foco no portfólio" } });
+    const get = await run(["motivation", "get", "--json"]);
+    expect(JSON.parse(get.stdout).data.source).toBe("rule");
+  });
+
+  it("motivation set com texto > 280 chars → exit 2", async () => {
+    expect((await run(["motivation", "set", "x".repeat(300), "--json"])).code).toBe(2);
+  });
+
+  it("sync whoop (não integrado) → exit 5", async () => {
+    const r = await run(["sync", "whoop", "--json"]);
+    expect(r.code).toBe(5);
+    expect(JSON.parse(r.stderr).error.code).toBe("INTEGRATION_UNAVAILABLE");
+  });
+
+  it("projects update --repo inválido → exit 2", async () => {
+    expect((await run(["projects", "update", "ideario", "--repo", "sem-barra", "--json"])).code).toBe(2);
   });
 });
 

@@ -1,12 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Activity, Moon, Zap, HeartPulse, GitCommit, CircleAlert, Plus } from "lucide-react";
+import { Activity, Moon, Zap, HeartPulse, GitCommit, CircleAlert } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { GlassCard } from "./GlassCard";
 import { StatCard } from "./StatCard";
-import { AgentBadge } from "./AgentBadge";
 import { TaskList } from "./TaskList";
+import { MotivationCard } from "./MotivationCard";
+import { Suggestions } from "./Suggestions";
+import { api } from "@/lib/client";
 import { mock } from "@/features/mock";
 import { cn } from "@/lib/cn";
 
@@ -32,26 +35,8 @@ export function TodayView() {
       <StatsRow />
       <TaskList />
       <div className="grid gap-4 md:grid-cols-2">
-        <GlassCard className="bg-forge/90 p-5" hover {...stagger(5)}>
-          <div className="flex items-center justify-between"><p className="text-sm font-semibold">Mensagem do dia</p><AgentBadge at={mock.message.at} /></div>
-          <p className="mt-3 text-base font-semibold leading-snug">{mock.message.text}</p>
-        </GlassCard>
-        <GlassCard className="p-5" {...stagger(6)}>
-          <p className="mb-3 border-l-2 border-forge pl-2 text-sm font-semibold">Sugestões</p>
-          <div className="flex flex-col gap-2">
-            {mock.suggestions.map((s) => (
-              <div key={s.id} className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium">{s.title}</p>
-                  <AgentBadge at={s.at} />
-                </div>
-                <p className="mt-1 text-[11px] text-white/50">{s.project} · {s.estimate} min · energia {s.energy === "high" ? "alta" : "baixa"}</p>
-                <p className="text-[11px] text-white/40">{s.reason}</p>
-                <button className="mt-2 inline-flex items-center gap-1 rounded-full bg-forge px-3 py-1 text-[11px] font-semibold"><Plus size={12} />Adicionar ao checklist</button>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
+        <MotivationCard />
+        <Suggestions />
       </div>
     </div>
   );
@@ -98,17 +83,28 @@ export function HealthView() {
   );
 }
 
+type Proj = { slug: string; name: string; color: string; repo: string | null; openTasks: number; idleDays: number | null; lastCommit: { message: string } | null; commitsWeek: number; openIssues: number };
+
 export function ProjectsView() {
+  const [projects, setProjects] = useState<Proj[]>([]);
+  useEffect(() => { api<Proj[]>("/projects").then(setProjects).catch(() => {}); }, []);
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      {mock.projects.map((p, i) => (
+      {projects.map((p, i) => (
         <GlassCard key={p.slug} className="p-5" hover {...stagger(i)}>
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-2 text-sm font-semibold"><i className="size-2.5 rounded-full" style={{ background: p.color }} />{p.name}</p>
-            <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold", p.idle >= 7 ? "bg-bad/20 text-bad" : "bg-ok/20 text-ok")}>{p.idle}d sem atividade</span>
+            {p.idleDays !== null && <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold", p.idleDays >= 7 ? "bg-bad/20 text-bad" : "bg-ok/20 text-ok")}>{p.idleDays}d sem atividade</span>}
           </div>
-          <p className="mt-3 flex items-center gap-1.5 text-xs text-white/60"><GitCommit size={13} />{p.lastCommit}</p>
-          <p className="mt-1 flex items-center gap-1.5 text-xs text-white/40"><CircleAlert size={13} />{p.issues} issues · {p.week} commits na semana</p>
+          {p.repo ? (
+            <>
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-white/60"><GitCommit size={13} />{p.lastCommit?.message ?? "sem sync ainda"}</p>
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-white/40"><CircleAlert size={13} />{p.openIssues} issues · {p.commitsWeek} commits na semana</p>
+            </>
+          ) : (
+            <p className="mt-3 text-[11px] text-white/40">Sem repositório. <code>forge projects update {p.slug} --repo dono/nome</code></p>
+          )}
+          <p className="mt-2 text-[11px] text-white/50">{p.openTasks} tarefas abertas</p>
         </GlassCard>
       ))}
     </div>

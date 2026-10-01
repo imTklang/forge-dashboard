@@ -3,15 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Copy, KeyRound, Trash2 } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
+import { api as call } from "@/lib/client";
 
 type Tok = { id: string; name: string; scopes: string[]; lastUsedAt: string | null; revoked: boolean };
-
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`/api/v1${path}`, { ...init, headers: { "content-type": "application/json" } });
-  const body = await res.json();
-  if (!res.ok) throw new Error(body.error?.message ?? "erro");
-  return body.data as T;
-}
 
 export default function Settings() {
   const [tokens, setTokens] = useState<Tok[]>([]);

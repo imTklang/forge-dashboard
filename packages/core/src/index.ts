@@ -78,7 +78,42 @@ export const ProjectSummary = z.object({
   color: z.string(),
   repo: z.string().nullable(),
   openTasks: z.number(),
+  /** Dias desde o último commit (null se sem repo/sync). */
+  idleDays: z.number().nullable(),
+  lastCommit: z.object({ at: z.string(), message: z.string() }).nullable(),
+  commitsWeek: z.number(),
+  openIssues: z.number(),
 });
+
+export const ProjectUpdate = z.object({
+  repo: z.string().regex(/^[\w.-]+\/[\w.-]+$/, "use owner/nome").nullable(),
+});
+
+export const SuggestionInput = z.array(
+  z.object({
+    title: z.string().min(1),
+    project: z.string().optional(),
+    reason: z.string().min(1),
+    estimate: z.number().int().positive().optional(),
+    energy: Energy.default("medium"),
+    date: IsoDate.optional(),
+  }),
+).min(1);
+
+export const Suggestion = z.object({
+  id: z.string(),
+  title: z.string(),
+  project: z.string().nullable(),
+  reason: z.string(),
+  estimateMin: z.number().nullable(),
+  energy: Energy,
+  date: z.string(),
+  accepted: z.boolean(),
+});
+
+export const MotivationSet = z.object({ text: z.string().min(1).max(280), date: IsoDate.optional() });
+
+export const Motivation = z.object({ date: z.string(), text: z.string(), source: z.enum(["agent", "rule"]) });
 
 export const Context = z.object({
   date: z.string(),
@@ -86,7 +121,8 @@ export const Context = z.object({
   tasks: z.array(Task),
   projects: z.array(ProjectSummary),
   health: z.unknown().nullable(),
-  suggestions: z.array(z.unknown()),
+  motivation: Motivation,
+  suggestions: z.array(Suggestion),
   reminders: z.array(z.unknown()),
 });
 export type Context = z.infer<typeof Context>;

@@ -1,6 +1,6 @@
 import { Command, CommanderError } from "commander";
 import { z } from "zod";
-import { Context, ProjectSummary, SubtasksInput, Task, TaskCreate, TaskUpdate } from "@forge/core";
+import { Context, Motivation, MotivationSet, ProjectSummary, ProjectUpdate, Suggestion, SuggestionInput, SubtasksInput, Task, TaskCreate, TaskUpdate } from "@forge/core";
 import { CliError, EXIT, configPath, printData, printError, readStdinJson, request, resolveConfig, saveConfig, table } from "./lib";
 
 type T = z.infer<typeof Task>;
@@ -63,7 +63,9 @@ function contextMd(c: Context) {
     lines.push(`### ${p}`);
     for (const t of ts) lines.push(`- [${t.id}] ${t.priority} ${t.status} ${t.title}${t.estimateMin ? ` (${t.estimateMin}m)` : ""}`);
   }
-  lines.push("", "## Projetos", ...c.projects.map((p) => `- ${p.slug}: ${p.openTasks} abertas${p.repo ? ` (${p.repo})` : ""}`));
+  lines.push("", "## Projetos", ...c.projects.map((p) => `- ${p.slug}: ${p.openTasks} abertas${p.idleDays !== null ? `, ${p.idleDays}d sem commit` : ""}${p.lastCommit ? ` (último: ${p.lastCommit.message})` : ""}`));
+  lines.push("", `Mensagem do dia (${c.motivation.source === "agent" ? "agente" : "regra"}): ${c.motivation.text}`);
+  lines.push("", "## Sugestões já existentes", ...(c.suggestions.length ? c.suggestions.map((x) => `- [${x.id}] ${x.title} (${x.energy}${x.accepted ? ", aceita" : ""})`) : ["(nenhuma)"]));
   lines.push("", `Saúde: ${c.health ? "disponível" : "sem dados (WHOOP não conectado)"}`);
   return lines.join("\n");
 }
@@ -156,11 +158,100 @@ tasks
 const projects = program.command("projects").description("Projetos");
 projects.command("list").action(async () => {
   const list = parse(z.array(ProjectSummary), await request("GET", "/projects"));
-  printData(list, json(), () => table([["SLUG", "ABERTAS", "REPO"], ...list.map((p) => [p.slug, String(p.openTasks), p.repo ?? "-"])]));
+  printData(list, json(), () => table([["SLUG", "ABERTAS", "PARADO", "ISSUES", "REPO"], ...list.map((p) => [p.slug, String(p.openTasks), p.idleDays === null ? "-" : `${p.idleDays}d`, String(p.openIssues), p.repo ?? "-"])]));
 });
 projects.command("show <slug>").action(async (slug: string) => {
   const p = await request<{ name: string; openTasks: { id: string; title: string; status: string; priority: string }[] }>("GET", `/projects/${slug}`);
   printData(p, json(), () => [p.name, ...p.openTasks.map((t) => `  ${t.id}  ${t.priority}  ${t.status}  ${t.title}`)].join("\n"));
+});
+
+projects
+  .command("update <slug>")
+  .description("Define o repositório GitHub (owner/nome, ou 'none' para remover)")
+  .requiredOption("--repo <owner/nome>")
+  .option("--dry-run")
+  .action(async (slug: string, o: { repo: string; dryRun?: boolean }) => {
+    const body = parse(ProjectUpdate, { repo: o.repo === "none" ? null : o.repo });
+    const out = await write<{ slug: string; repo: string | null }>(o, "PATCH", `/projects/${slug}`, body);
+    printData(out, json(), () => ("dryRun" in out ? `[dry-run] ${JSON.stringify(out)}` : `${out.slug}  ${out.repo ?? "(sem repo)"}`));
+  });
+
+// ---------- suggestions ----------
+type Sug = z.infer<typeof Suggestion>;
+const suggestions = program.command("suggestions").description("Sugestões do dia (escritas por agentes)");
+
+suggestions
+  .command("list")
+  .option("--date <YYYY-MM-DD>")
+  .action(async (o: { date?: string }) => {
+    const list = parse(z.array(Suggestion), await request("GET", `/suggestions${o.date ? `?date=${o.date}` : ""}`));
+    printData(list, json(), () => (list.length ? table([["ID", "ENERGIA", "PROJETO", "EST", "TÍTULO"], ...list.map((x) => [x.id, x.energy, x.project ?? "-", x.estimateMin ? `${x.estimateMin}m` : "-", x.title])]) : "(nenhuma sugestão)"));
+  });
+
+suggestions
+  .command("add")
+  .description('Adiciona sugestões via --stdin: [{"title","project","reason","estimate","energy"}]')
+  .requiredOption("--stdin", "lê array JSON de stdin")
+  .option("--dry-run")
+  .action(async (o: { dryRun?: boolean }) => {
+    const body = parse(SuggestionInput, await readStdinJson());
+    const out = await write<Sug[]>(o, "POST", "/suggestions", body);
+    printData(out, json(), () => (Array.isArray(out) ? out.map((x) => `${x.id}  ${x.title}`).join("\n") : `[dry-run] ${JSON.stringify(out)}`));
+  });
+
+suggestions
+  .command("clear")
+  .option("--date <YYYY-MM-DD>")
+  .option("--dry-run")
+  .action(async (o: { date?: string; dryRun?: boolean }) => {
+    const out = await write<{ deleted: number }>(o, "DELETE", `/suggestions${o.date ? `?date=${o.date}` : ""}`, undefined);
+    printData(out, json(), () => ("dryRun" in out ? `[dry-run] ${JSON.stringify(out)}` : `${out.deleted} removida(s)`));
+  });
+
+// ---------- motivation ----------
+const motivation = program.command("motivation").description("Mensagem do dia");
+motivation
+  .command("set <text>")
+  .option("--date <YYYY-MM-DD>")
+  .option("--dry-run")
+  .action(async (text: string, o: { date?: string; dryRun?: boolean }) => {
+    const body = parse(MotivationSet, { text, date: o.date });
+    const out = await write<z.infer<typeof Motivation>>(o, "PUT", "/motivation", body);
+    printData(out, json(), () => ("dryRun" in out ? `[dry-run] ${JSON.stringify(out)}` : out.text));
+  });
+motivation
+  .command("get")
+  .option("--date <YYYY-MM-DD>")
+  .action(async (o: { date?: string }) => {
+    const m = parse(Motivation, await request("GET", `/motivation${o.date ? `?date=${o.date}` : ""}`));
+    printData(m, json(), () => `${m.text}  (${m.source === "agent" ? "via agente" : "regra"})`);
+  });
+
+// ---------- health (WHOOP; indisponível até a integração) ----------
+const health = program.command("health").description("Saúde (WHOOP)");
+health.command("today").action(async () => {
+  const d = await request<unknown>("GET", "/health/today");
+  printData(d, json(), () => JSON.stringify(d, null, 2));
+});
+health
+  .command("history")
+  .option("--days <n>", "janela em dias", "30")
+  .option("--metrics <list>", "recovery,hrv,sleep,strain")
+  .action(async (o: { days: string; metrics?: string }) => {
+    const days = int(o.days, "--days");
+    const d = await request<unknown>("GET", `/health/history?days=${days}${o.metrics ? `&metrics=${o.metrics}` : ""}`);
+    printData(d, json(), () => JSON.stringify(d, null, 2));
+  });
+
+// ---------- sync ----------
+const sync = program.command("sync").description("Sincroniza integrações");
+sync.command("github").action(async () => {
+  const d = await request<{ synced: number; results: { slug: string; ok: boolean; error?: string }[] }>("POST", "/sync/github");
+  printData(d, json(), () => [`${d.synced} projeto(s) sincronizado(s)`, ...d.results.filter((r) => !r.ok).map((r) => `  falhou ${r.slug}: ${r.error}`)].join("\n"));
+});
+sync.command("whoop").action(async () => {
+  const d = await request<unknown>("POST", "/sync/whoop");
+  printData(d, json(), () => JSON.stringify(d));
 });
 
 // ---------- schema ----------
@@ -173,6 +264,11 @@ const SCHEMAS: Record<string, { input?: z.ZodType; output: z.ZodType }> = {
   "tasks defer": { output: Task },
   "tasks subtasks add": { input: SubtasksInput, output: Task },
   "projects list": { output: z.array(ProjectSummary) },
+  "projects update": { input: ProjectUpdate, output: ProjectSummary },
+  "suggestions list": { output: z.array(Suggestion) },
+  "suggestions add": { input: SuggestionInput, output: z.array(Suggestion) },
+  "motivation set": { input: MotivationSet, output: Motivation },
+  "motivation get": { output: Motivation },
 };
 
 program
@@ -213,11 +309,11 @@ program
   });
 
 // ---------- execução ----------
-program.exitOverride().configureOutput({ writeErr: () => {}, outputError: () => {} });
-for (const c of program.commands) {
+const silence = (c: Command) => {
   c.exitOverride().configureOutput({ writeErr: () => {}, outputError: () => {} });
-  for (const s of c.commands) s.exitOverride().configureOutput({ writeErr: () => {}, outputError: () => {} });
-}
+  c.commands.forEach(silence);
+};
+silence(program);
 
 try {
   await program.parseAsync(process.argv);

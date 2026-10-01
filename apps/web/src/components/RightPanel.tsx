@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Flame, MoreHorizontal } from "lucide-react";
 import { GlassCard } from "./GlassCard";
 import { mock } from "@/features/mock";
 import { cn } from "@/lib/cn";
+import { api } from "@/lib/client";
 
 const weekdays = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -16,12 +18,15 @@ function heatClass(n: number | undefined) {
 }
 
 export function RightPanel() {
-  const { user, heat, scheduled } = mock;
+  const { user, scheduled } = mock;
+  const [summary, setSummary] = useState<{ streak: number; heat: Record<string, number> }>({ streak: 0, heat: {} });
+  useEffect(() => { api<typeof summary>("/summary").then(setSummary).catch(() => {}); }, []);
   const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth();
   const first = new Date(year, month, 1).getDay();
   const days = new Date(year, month + 1, 0).getDate();
+  const prefix = `${year}-${String(month + 1).padStart(2, "0")}-`;
   const label = today.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   return (
@@ -38,7 +43,7 @@ export function RightPanel() {
         <div className="mt-4 grid grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/5 py-2 text-center">
           <div><p className="text-sm font-bold">{user.weightKg} kg</p><p className="text-[10px] text-white/50">Peso</p></div>
           <div><p className="text-sm font-bold">{user.heightCm} cm</p><p className="text-[10px] text-white/50">Altura</p></div>
-          <div><p className="flex items-center justify-center gap-1 text-sm font-bold"><Flame size={13} className="text-forge" />{user.streak}</p><p className="text-[10px] text-white/50">Streak</p></div>
+          <div><p className="flex items-center justify-center gap-1 text-sm font-bold"><Flame size={13} className="text-forge" />{summary.streak}</p><p className="text-[10px] text-white/50">Streak</p></div>
         </div>
       </GlassCard>
 
@@ -52,7 +57,7 @@ export function RightPanel() {
             return (
               <span
                 key={d}
-                className={cn("grid aspect-square place-items-center rounded-full", heatClass(heat[d]), d === today.getDate() && "ring-2 ring-white")}
+                className={cn("grid aspect-square place-items-center rounded-full", heatClass(summary.heat[`${prefix}${String(d).padStart(2, "0")}`]), d === today.getDate() && "ring-2 ring-white")}
               >
                 {d}
               </span>
