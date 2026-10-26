@@ -45,13 +45,15 @@ function Row({ task, onDone, onDefer }: { task: TaskDto; onDone: () => void; onD
       </button>
       <div className="min-w-0 flex-1">
         <p className={cn("truncate text-sm font-medium", done && "text-muted-foreground line-through")}>{task.title}</p>
-        <p className="truncate text-xs text-muted-foreground">
-          {task.project}
-          {task.estimateMin ? ` · ${task.estimateMin} min` : ""}
-          {task.status === "deferred" ? " · adiada" : ""}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <p className="text-xs text-muted-foreground">
+            {task.project}
+            {task.estimateMin ? ` · ${task.estimateMin} min` : ""}
+            {task.status === "deferred" ? " · adiada" : ""}
+          </p>
+          {task.source === "agent" && <AgentBadge at={task.createdAt} />}
+        </div>
       </div>
-      {task.source === "agent" && <AgentBadge at={task.createdAt} />}
       <Badge variant={priorityVariant[task.priority]}>{task.priority.toUpperCase()}</Badge>
       {!done && (
         <Button variant="quiet" size="icon-sm" aria-label={`Adiar ${task.title} para amanhã`} onClick={onDefer}>
@@ -100,9 +102,14 @@ export function TaskList() {
   async function add(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || sending) return;
+    const slug = project || projects[0]?.slug;
+    if (!slug) {
+      setError("Os projetos ainda estão carregando. Tente novamente em instantes.");
+      return;
+    }
     setSending(true);
     try {
-      await api("/tasks", { method: "POST", body: JSON.stringify({ title: title.trim(), project }) });
+      await api("/tasks", { method: "POST", body: JSON.stringify({ title: title.trim(), project: slug }) });
       setTitle("");
       await change();
     } catch (err) {
@@ -115,6 +122,14 @@ export function TaskList() {
   const act = (id: string, action: "done" | "defer") => async () => {
     await api(`/tasks/${id}/${action}`, { method: "POST" });
     await change();
+  };
+
+  const titleOf = (id: string | number) => tasks?.find((t) => t.id === id)?.title ?? "tarefa";
+  const announcements = {
+    onDragStart: ({ active }: { active: { id: string | number } }) => `Tarefa “${titleOf(active.id)}” selecionada.`,
+    onDragOver: ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) => (over ? `Tarefa “${titleOf(active.id)}” sobre “${titleOf(over.id)}”.` : undefined),
+    onDragEnd: ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) => (over ? `Tarefa “${titleOf(active.id)}” movida para a posição de “${titleOf(over.id)}”.` : `Tarefa “${titleOf(active.id)}” solta na mesma posição.`),
+    onDragCancel: ({ active }: { active: { id: string | number } }) => `Movimento de “${titleOf(active.id)}” cancelado.`,
   };
 
   async function onDragEnd({ active, over }: DragEndEvent) {
@@ -149,7 +164,12 @@ export function TaskList() {
             <Skeleton className="h-14" />
           </div>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={onDragEnd}
+            accessibility={{ announcements, screenReaderInstructions: { draggable: "Para reordenar, pressione espaço, use as setas para mover e pressione espaço de novo para soltar. Esc cancela." } }}
+          >
             <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
               <ul className="flex flex-col gap-2">
                 {tasks.map((t) => (

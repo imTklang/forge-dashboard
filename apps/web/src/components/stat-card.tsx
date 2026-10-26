@@ -39,7 +39,7 @@ export function StatCard({ title, value, unit, decimals = 0, icon: Icon, tone = 
         {chart && (
           <CardContent aria-hidden="true" className="h-10">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chart.map((v, i) => ({ i, v }))}>
+              <LineChart data={chart.map((v, i) => ({ i, v }))} accessibilityLayer={false}>
                 <YAxis hide domain={["auto", "auto"]} />
                 <Line type="monotone" dataKey="v" stroke={toneColor[tone]} strokeWidth={2} dot={false} isAnimationActive={!reduced} />
               </LineChart>

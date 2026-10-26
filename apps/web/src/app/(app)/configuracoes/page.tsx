@@ -73,7 +73,7 @@ export default function SettingsPage() {
             <Label htmlFor="token-name" className="sr-only">Nome do token</Label>
             <Input id="token-name" name="name" autoComplete="off" spellCheck={false} required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: claude-code…" className="min-w-0 flex-1 basis-48" />
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input type="checkbox" checked={canWrite} onChange={(e) => setCanWrite(e.target.checked)} className="size-4 accent-primary" />
+              <input type="checkbox" checked={canWrite} onChange={(e) => setCanWrite(e.target.checked)} className="size-5 accent-primary" />
               Permitir escrita
             </label>
             <Button type="submit">Gerar token</Button>
